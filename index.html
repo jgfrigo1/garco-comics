@@ -4,10 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spidey Comics - Lector de Còmics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Titan+One&family=Permanent+Marker&family=Bebas+Neue&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app">
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-content">
+                <div class="spider-web"></div>
+                <div class="comic-burst">
+                    <h1 class="welcome-title">SPIDEY COMICS</h1>
+                    <p class="welcome-subtitle">EL TEU LECTOR DE CÒMICS</p>
+                </div>
+                <div class="welcome-hero">🕷️</div>
+                <button class="enter-btn" id="enterApp">
+                    <span>ENTRAR</span>
+                    <div class="btn-burst"></div>
+                </button>
+                <div class="welcome-features">
+                    <div class="feature-badge">
+                        <span class="badge-icon">📚</span>
+                        <span>Col·lecció completa</span>
+                    </div>
+                    <div class="feature-badge">
+                        <span class="badge-icon">📱</span>
+                        <span>Multi-dispositiu</span>
+                    </div>
+                    <div class="feature-badge">
+                        <span class="badge-icon">⚡</span>
+                        <span>Lectura optimitzada</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="header">
             <div class="header-content">
@@ -16,7 +49,7 @@
                     <span></span>
                     <span></span>
                 </button>
-                <h1 class="logo">🕷️ Spidey Comics</h1>
+                <h1 class="logo">🕷️ SPIDEY COMICS</h1>
                 <div class="header-actions">
                     <button class="btn-icon" id="searchBtn" title="Cercar">🔍</button>
                 </div>
@@ -26,7 +59,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>Col·leccions</h2>
+                <h2>COL·LECCIONS</h2>
                 <button class="close-sidebar" id="closeSidebar">✕</button>
             </div>
             <div class="search-box">
@@ -42,8 +75,9 @@
             <!-- Home View -->
             <div class="view" id="homeView">
                 <div class="hero">
-                    <h2>Benvingut al Lector de Còmics</h2>
-                    <p>Explora la col·lecció completa de Spider-Man</p>
+                    <div class="hero-burst-bg"></div>
+                    <h2 class="comic-heading">BENVINGUT!</h2>
+                    <p class="comic-text">Explora la col·lecció completa de Spider-Man</p>
                 </div>
                 <div class="series-grid" id="seriesGrid">
                     <!-- Will be populated by JS -->
@@ -52,8 +86,10 @@
 
             <!-- Volume View -->
             <div class="view hidden" id="volumeView">
-                <button class="back-btn" id="backToSeries">← Tornar</button>
-                <h2 class="view-title" id="volumeTitle"></h2>
+                <button class="back-btn" id="backToSeries">
+                    <span>← TORNAR</span>
+                </button>
+                <h2 class="view-title comic-heading" id="volumeTitle"></h2>
                 <div class="volumes-grid" id="volumesGrid">
                     <!-- Will be populated by JS -->
                 </div>
@@ -61,36 +97,69 @@
 
             <!-- Reader View -->
             <div class="view hidden" id="readerView">
-                <div class="reader-header">
-                    <button class="back-btn" id="backToVolumes">← Tornar</button>
-                    <div class="reader-info">
-                        <h3 id="readerTitle"></h3>
-                        <span id="pageInfo">Pàgina 1 de 1</span>
+                <!-- Floating Controls Toggle -->
+                <button class="controls-toggle" id="controlsToggle" title="Mostrar/Ocultar controls">
+                    ⚙️
+                </button>
+
+                <!-- Collapsible Controls Panel -->
+                <div class="reader-controls-panel" id="controlsPanel">
+                    <div class="controls-header">
+                        <button class="back-btn-reader" id="backToVolumes">← SORTIR</button>
+                        <div class="reader-info">
+                            <h3 id="readerTitle"></h3>
+                            <span id="pageInfo">Pàgina 1 de 1</span>
+                        </div>
+                        <button class="close-controls" id="closeControls">✕</button>
                     </div>
-                    <div class="reader-controls">
-                        <button class="btn-icon" id="fitWidth" title="Ajustar a l'amplada">↔️</button>
-                        <button class="btn-icon" id="fitHeight" title="Ajustar a l'alçada">↕️</button>
-                        <button class="btn-icon" id="zoomOut" title="Allunyar">−</button>
-                        <button class="btn-icon" id="zoomIn" title="Apropar">+</button>
-                        <button class="btn-icon" id="fullscreen" title="Pantalla completa">⛶</button>
+                    
+                    <div class="controls-actions">
+                        <div class="control-group">
+                            <label>AJUSTAR:</label>
+                            <button class="btn-control" id="fitWidth" title="Ajustar a l'amplada">
+                                <span>↔️</span>
+                                <span>Amplada</span>
+                            </button>
+                            <button class="btn-control" id="fitHeight" title="Ajustar a l'alçada">
+                                <span>↕️</span>
+                                <span>Alçada</span>
+                            </button>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>ZOOM:</label>
+                            <button class="btn-control" id="zoomOut" title="Allunyar">−</button>
+                            <button class="btn-control" id="zoomIn" title="Apropar">+</button>
+                            <button class="btn-control" id="fullscreen" title="Pantalla completa">⛶</button>
+                        </div>
+                    </div>
+
+                    <div class="page-navigation">
+                        <button class="nav-btn" id="prevPage">← ANTERIOR</button>
+                        <div class="page-slider">
+                            <input type="range" id="pageSlider" min="1" max="1" value="1">
+                        </div>
+                        <button class="nav-btn" id="nextPage">SEGÜENT →</button>
                     </div>
                 </div>
+
+                <!-- Reading Container -->
                 <div class="reader-container" id="readerContainer">
                     <img id="comicPage" src="" alt="Comic page">
-                </div>
-                <div class="reader-navigation">
-                    <button class="nav-btn" id="prevPage">← Anterior</button>
-                    <div class="page-slider">
-                        <input type="range" id="pageSlider" min="1" max="1" value="1">
-                    </div>
-                    <button class="nav-btn" id="nextPage">Següent →</button>
+                    
+                    <!-- Touch Navigation Zones -->
+                    <div class="touch-zone touch-zone-left" id="touchLeft"></div>
+                    <div class="touch-zone touch-zone-right" id="touchRight"></div>
                 </div>
             </div>
         </main>
 
         <!-- Loading Spinner -->
         <div class="loading" id="loading">
-            <div class="spinner"></div>
+            <div class="spinner-comic">
+                <div class="spinner"></div>
+                <p class="loading-text">CARREGANT...</p>
+            </div>
         </div>
     </div>
 
