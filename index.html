@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spidey Comics - Lector de Còmics</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <button class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <h1 class="logo">🕷️ Spidey Comics</h1>
+                <div class="header-actions">
+                    <button class="btn-icon" id="searchBtn" title="Cercar">🔍</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Col·leccions</h2>
+                <button class="close-sidebar" id="closeSidebar">✕</button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="sidebarSearch" placeholder="Cercar sèries...">
+            </div>
+            <nav class="sidebar-nav" id="sidebarNav">
+                <!-- Will be populated by JS -->
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Home View -->
+            <div class="view" id="homeView">
+                <div class="hero">
+                    <h2>Benvingut al Lector de Còmics</h2>
+                    <p>Explora la col·lecció completa de Spider-Man</p>
+                </div>
+                <div class="series-grid" id="seriesGrid">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Volume View -->
+            <div class="view hidden" id="volumeView">
+                <button class="back-btn" id="backToSeries">← Tornar</button>
+                <h2 class="view-title" id="volumeTitle"></h2>
+                <div class="volumes-grid" id="volumesGrid">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Reader View -->
+            <div class="view hidden" id="readerView">
+                <div class="reader-header">
+                    <button class="back-btn" id="backToVolumes">← Tornar</button>
+                    <div class="reader-info">
+                        <h3 id="readerTitle"></h3>
+                        <span id="pageInfo">Pàgina 1 de 1</span>
+                    </div>
+                    <div class="reader-controls">
+                        <button class="btn-icon" id="fitWidth" title="Ajustar a l'amplada">↔️</button>
+                        <button class="btn-icon" id="fitHeight" title="Ajustar a l'alçada">↕️</button>
+                        <button class="btn-icon" id="zoomOut" title="Allunyar">−</button>
+                        <button class="btn-icon" id="zoomIn" title="Apropar">+</button>
+                        <button class="btn-icon" id="fullscreen" title="Pantalla completa">⛶</button>
+                    </div>
+                </div>
+                <div class="reader-container" id="readerContainer">
+                    <img id="comicPage" src="" alt="Comic page">
+                </div>
+                <div class="reader-navigation">
+                    <button class="nav-btn" id="prevPage">← Anterior</button>
+                    <div class="page-slider">
+                        <input type="range" id="pageSlider" min="1" max="1" value="1">
+                    </div>
+                    <button class="nav-btn" id="nextPage">Següent →</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
