@@ -61,25 +61,81 @@ const showView = (viewName) => {
 // Data Loading
 async function loadComics() {
     showLoading();
-    try {
-        // Use local JSON file
-        const response = await fetch('./data/comics.json');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    
+    const sources = [
+        {
+            url: './data/comics.json',
+            name: 'Local'
+        },
+        {
+            url: 'https://cdn.jsdelivr.net/gh/jgfrigo2/apps_data@main/spidey/spidey.json',
+            name: 'CDN'
+        },
+        {
+            url: 'https://raw.githubusercontent.com/jgfrigo2/apps_data/main/spidey/spidey.json',
+            name: 'GitHub Raw'
         }
-        
-        const data = await response.json();
-        console.log('Loaded comics:', data.length);
-        
-        state.comics = data;
-        initializeApp();
-    } catch (error) {
-        console.error('Error loading comics:', error);
-        alert('Error carregant els còmics. Si us plau, torna-ho a intentar.\n\n' + error.message);
-    } finally {
-        hideLoading();
+    ];
+    
+    for (const source of sources) {
+        try {
+            console.log(`📡 Intentant carregar des de ${source.name}:`, source.url);
+            
+            const response = await fetch(source.url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('⚠️ Content-Type no és JSON:', contentType);
+            }
+            
+            const data = await response.json();
+            
+            // Handle both array and object formats
+            const comics = Array.isArray(data) ? data : (data.comics || []);
+            
+            if (comics.length === 0) {
+                throw new Error('No hi ha còmics en les dades');
+            }
+            
+            console.log(`✅ Carregats ${comics.length} còmics des de ${source.name}`);
+            state.comics = comics;
+            initializeApp();
+            hideLoading();
+            return;
+            
+        } catch (error) {
+            console.error(`❌ Error carregant des de ${source.name}:`, error);
+        }
     }
+    
+    // All sources failed
+    hideLoading();
+    const errorMsg = `
+        No s'han pogut carregar els còmics.
+        
+        Possibles causes:
+        • Comprova la connexió a Internet
+        • El fitxer JSON no existeix o és invàlid
+        • Problemes de CORS
+        
+        Revisa la consola del navegador (F12) per més detalls.
+    `;
+    alert(errorMsg);
+    
+    // Show error in UI
+    elements.seriesGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+            <h2 style="color: var(--primary); margin-bottom: 20px;">❌ Error</h2>
+            <p>No s'han pogut carregar els còmics.</p>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: var(--primary); border: none; color: white; border-radius: 8px; cursor: pointer;">
+                🔄 Recarregar pàgina
+            </button>
+        </div>
+    `;
 }
 // Initialize App
 function initializeApp() {
