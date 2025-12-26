@@ -5,11 +5,14 @@ const state = {
     currentComic: null,
     currentPage: 0,
     zoom: 1,
-    fitMode: 'width' // 'width', 'height', 'none'
+    fitMode: 'width', // 'width', 'height', 'none'
+    controlsVisible: false
 };
 
 // DOM Elements
 const elements = {
+    welcomeScreen: document.getElementById('welcomeScreen'),
+    enterApp: document.getElementById('enterApp'),
     loading: document.getElementById('loading'),
     sidebar: document.getElementById('sidebar'),
     menuToggle: document.getElementById('menuToggle'),
@@ -35,7 +38,12 @@ const elements = {
     zoomIn: document.getElementById('zoomIn'),
     zoomOut: document.getElementById('zoomOut'),
     fullscreen: document.getElementById('fullscreen'),
-    readerContainer: document.getElementById('readerContainer')
+    readerContainer: document.getElementById('readerContainer'),
+    controlsToggle: document.getElementById('controlsToggle'),
+    controlsPanel: document.getElementById('controlsPanel'),
+    closeControls: document.getElementById('closeControls'),
+    touchLeft: document.getElementById('touchLeft'),
+    touchRight: document.getElementById('touchRight')
 };
 
 // Utility Functions
@@ -55,7 +63,28 @@ const showView = (viewName) => {
         elements.volumeView.classList.remove('hidden');
     } else if (viewName === 'reader') {
         elements.readerView.classList.remove('hidden');
+        // Show controls briefly, then auto-hide for immersion
+        showControls();
+        setTimeout(() => hideControls(), 3000);
     }
+};
+
+const hideControls = () => {
+    if (!elements.readerControlsPanel.classList.contains('hidden')) {
+        elements.readerControlsPanel.classList.add('hidden');
+        state.controlsVisible = false;
+    }
+};
+
+const showControls = () => {
+    if (elements.readerControlsPanel.classList.contains('hidden')) {
+        elements.readerControlsPanel.classList.remove('hidden');
+        state.controlsVisible = true;
+    }
+};
+
+const toggleControls = () => {
+    state.controlsVisible ? hideControls() : showControls();
 };
 
 // Data Loading
@@ -87,14 +116,7 @@ async function loadComics() {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                console.warn('⚠️ Content-Type no és JSON:', contentType);
-            }
-            
             const data = await response.json();
-            
-            // Handle both array and object formats
             const comics = Array.isArray(data) ? data : (data.comics || []);
             
             if (comics.length === 0) {
@@ -112,31 +134,21 @@ async function loadComics() {
         }
     }
     
-    // All sources failed
     hideLoading();
-    const errorMsg = `
-        No s'han pogut carregar els còmics.
-        
-        Possibles causes:
-        • Comprova la connexió a Internet
-        • El fitxer JSON no existeix o és invàlid
-        • Problemes de CORS
-        
-        Revisa la consola del navegador (F12) per més detalls.
-    `;
+    const errorMsg = `No s'han pogut carregar els còmics. Revisa la consola del navegador (F12) per més detalls.`;
     alert(errorMsg);
     
-    // Show error in UI
     elements.seriesGrid.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
-            <h2 style="color: var(--primary); margin-bottom: 20px;">❌ Error</h2>
-            <p>No s'han pogut carregar els còmics.</p>
-            <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: var(--primary); border: none; color: white; border-radius: 8px; cursor: pointer;">
-                🔄 Recarregar pàgina
+            <h2 class="comic-heading" style="color: var(--primary); margin-bottom: 20px;">❌ ERROR DE CÀRREGA</h2>
+            <p class="comic-text">No s'han pogut carregar les dades dels còmics.</p>
+            <button onclick="location.reload()" class="enter-btn" style="margin-top: 30px; font-size: 24px; padding: 15px 40px;">
+                <span>RECARREGAR</span>
             </button>
         </div>
     `;
 }
+
 // Initialize App
 function initializeApp() {
     renderSidebar();
@@ -236,7 +248,7 @@ function renderVolumes(seriesName) {
     elements.volumeTitle.textContent = seriesName;
     elements.volumesGrid.innerHTML = volumes.map((volume, index) => `
         <div class="volume-card" onclick="openReader(${index}, '${seriesName.replace(/'/g, "\\'")}')">
-            <img class="volume-cover" src="${volume.coverUrl}" alt="${volume.title}" loading="lazy">
+            <img class="volume-cover" src="${volume.coverUrl}" alt="${volume.title}" loading="lazy" onerror="this.onerror=null;this.src='https://via.placeholder.com/220x330/e62429/ffffff?text=Portada+no+disponible';">
             <div class="volume-info">
                 <h3>${volume.volume || volume.title}</h3>
                 <p>${volume.year || ''}</p>
@@ -309,6 +321,11 @@ function applyFitMode() {
 
 // Event Listeners
 function setupEventListeners() {
+    // Welcome Screen
+    elements.enterApp.addEventListener('click', () => {
+        elements.welcomeScreen.classList.add('hidden');
+    });
+
     // Menu Toggle
     elements.menuToggle.addEventListener('click', () => {
         elements.sidebar.classList.toggle('active');
@@ -338,7 +355,11 @@ function setupEventListeners() {
         showView('volume');
     });
 
-    // Reader Controls
+    // Reader Controls Toggle
+    elements.controlsToggle.addEventListener('click', toggleControls);
+    elements.closeControls.addEventListener('click', hideControls);
+
+    // Reader Controls Actions
     elements.prevPage.addEventListener('click', () => {
         if (state.currentPage > 0) {
             state.currentPage--;
@@ -389,6 +410,22 @@ function setupEventListeners() {
             document.exitFullscreen();
         }
     });
+    
+    // Touch zones for navigation
+    elements.touchLeft.addEventListener('click', () => {
+        if (state.currentPage > 0) {
+            state.currentPage--;
+            updatePage();
+        }
+    });
+
+    elements.touchRight.addEventListener('click', () => {
+        if (state.currentPage < state.currentComic.pages.length - 1) {
+            state.currentPage++;
+            updatePage();
+        }
+    });
+
 
     // Keyboard Navigation
     document.addEventListener('keydown', (e) => {
@@ -399,7 +436,19 @@ function setupEventListeners() {
             } else if (e.key === 'ArrowRight' && state.currentPage < state.currentComic.pages.length - 1) {
                 state.currentPage++;
                 updatePage();
+            } else if (e.key === 'c' || e.key === 'C') {
+                toggleControls();
             }
+        }
+    });
+    
+    // Auto-hide controls when mouse stops moving
+    let mouseTimeout;
+    elements.readerContainer.addEventListener('mousemove', () => {
+        if (!elements.readerView.classList.contains('hidden')) {
+            showControls();
+            clearTimeout(mouseTimeout);
+            mouseTimeout = setTimeout(hideControls, 3000);
         }
     });
 
