@@ -1,0 +1,37 @@
+# File: .github/workflows/generate-lockfile.yml
+name: Create package-lock.json
+
+on:
+  # This allows us to run it manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  generate-lock-file:
+    name: Generate Lock File
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies and generate lock file
+        run: npm install
+
+      - name: Commit and push package-lock.json
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add package-lock.json
+          # Check if there is anything to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: Generate package-lock.json"
+            git push
+          fi
