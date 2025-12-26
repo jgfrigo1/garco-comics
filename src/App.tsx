@@ -333,9 +333,10 @@ function App() {
                 src={selectedVolume.pages[currentPage]}
                 alt={`Page ${currentPage + 1}`}
                 className="max-h-full max-w-full object-contain cursor-pointer"
-                onClick={() => {
-                  const rect = (event.target as HTMLElement).getBoundingClientRect();
-                  const x = (event as any).clientX - rect.left;
+                onClick={(e: React.MouseEvent<HTMLImageElement>) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+              
                   if (x < rect.width / 2) {
                     handlePrevPage();
                   } else {
