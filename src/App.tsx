@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AppState, Volume } from './types';
+import { AppState, Volume } from './types.ts';
 import { loadBookmarks, saveBookmarkLocal, loadConfig } from './services/mockDataService';
 import AuthView from './components/AuthView';
 import LibraryView from './components/LibraryView';
