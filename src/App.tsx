@@ -41,7 +41,7 @@ const App: React.FC = () => {
       const books = loadBookmarks();
 
       try {
-        const response = await fetch('/data/comics.json');
+        const response = await fetch('/public/data/comics.json');
         if (!response.ok) {
           throw new Error(`Could not load comics.json: ${response.statusText}`);
         }
