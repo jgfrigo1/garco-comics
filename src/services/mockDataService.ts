@@ -1,7 +1,7 @@
 import { Bookmark, Config, Volume } from '../types';
 
 // --- Load Comics Data ---
-export const loadComicsData = async (): Promise<{ volumes: Volume[] }> => {
+export const loadComicsData = async (): Promise<any[]> => {
   try {
     const response = await fetch('https://raw.githubusercontent.com/jgfrigo2/apps_data/refs/heads/main/spidey/spidey.json');
     if (!response.ok) {
@@ -11,7 +11,7 @@ export const loadComicsData = async (): Promise<{ volumes: Volume[] }> => {
     return data;
   } catch (error) {
     console.error("Failed to load comics data:", error);
-    return { volumes: [] };
+    return [];
   }
 };
 
