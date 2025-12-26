@@ -1,6 +1,6 @@
 // src/components/LibraryView.tsx
 import React from 'react';
-import { Volume } from '../types.ts';
+import { Volume } from '../types';
 import { Search, ChevronRight, ArrowLeft, Layers } from 'lucide-react';
 
 const WELCOME_IMAGE = "https://i.annihil.us/u/prod/marvel/i/mg/1/00/6331e8b5487df/clean.jpg"; // Dynamic comic art
