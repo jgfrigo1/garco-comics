@@ -1,7 +1,7 @@
-// src/components/ReaderView.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume } from '../types';
-import { ChevronLeft, Maximize, Minimize2, ZoomIn, ZoomOut } from 'lucide-react';
+// The import statement below is the only line that has changed
+import { ChevronLeft, Maximize, Minimize2, ZoomIn, ZoomOut, Layers } from 'lucide-react';
 
 interface ReaderViewProps {
   volume: Volume;
@@ -112,7 +112,9 @@ const ReaderView: React.FC<ReaderViewProps> = ({ volume, closeReader, currentPag
                   <span>{totalPages}</span>
               </div>
               <div className="flex justify-center items-center gap-4 text-white">
-                  <button onClick={() => setFitMode('contain')} className={`p-2 rounded-full ${fitMode === 'contain' ? 'bg-spidey-blue' : 'bg-white/10'}`}><Layers size={16}/></button>
+                  <button onClick={() => setFitMode('contain')} className={`p-2 rounded-full ${fitMode === 'contain' ? 'bg-spidey-blue' : 'bg-white/10'}`}>
+                    <Layers size={16}/>
+                  </button>
                   <button onClick={() => setFitMode('width')} className={`p-2 rounded-full ${fitMode === 'width' ? 'bg-spidey-blue' : 'bg-white/10'}`}>W</button>
                   <button onClick={() => setZoomLevel(z => Math.max(z - 0.25, 0.5))} className="p-2 rounded-full bg-white/10"><ZoomOut size={16}/></button>
                   <button onClick={() => setZoomLevel(z => Math.min(z + 0.25, 5))} className="p-2 rounded-full bg-white/10"><ZoomIn size={16}/></button>
