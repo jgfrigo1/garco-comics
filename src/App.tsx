@@ -1,233 +1,245 @@
 // src/App.tsx
-import { loadBookmarks, saveBookmarkLocal, loadConfig } from './services/mockDataService';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AppState, Volume } from './types'; // Correct import
-// Removed duplicate import for mockDataService functions
-import AuthView from './components/AuthView';
-import LibraryView from './components/LibraryView';
-import ReaderView from './components/ReaderView';
-// SpideyChat import is gone, confirmed by the comment.
-// Ensure all Lucide icons used in this file are listed here
-import { X, Library, LogOut, ChevronDown, ChevronRight, Layers } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Volume } from './types';
+import { loadComicsData } from './services/mockDataService';
+import { X, Home, Book, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const APP_TITLE = "Garco Comics";
-const PASSWORD = "peter";
+interface ComicData {
+  series: string;
+  volume: string;
+  title: string;
+  year: string;
+  coverUrl: string;
+  pages: string[];
+  id: string;
+}
 
-const App: React.FC = () => {
-  const [state, setState] = useState<AppState>({
-    isAuthenticated: false,
-    currentView: 'library',
-    activeVolumeId: null,
-    volumes: [],
-    bookmarks: {},
-    fileHandle: null, // Consider if this is still needed or fully implemented
-    libraryData: { categories: [], volumeAssignments: {} }, // Consider if this is still needed or fully implemented
-    selectedCategoryId: null, // Consider if this is still needed or fully implemented
-    searchQuery: '',
-    config: { cloudflareWorkerUrl: '', webDavUrl: '', webDavUser: '', webDavPass: '', geminiApiKey: '' },
-    selectedSeries: null,
-  });
+interface SeriesGroup {
+  series: string;
+  volumes: ComicData[];
+}
 
-  const [passwordInput, setPasswordInput] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [expandedAlpha, setExpandedAlpha] = useState<Record<string, boolean>>({});
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+function App() {
+  const [comicsData, setComicsData] = useState<ComicData[]>([]);
+  const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
+  const [selectedVolume, setSelectedVolume] = useState<ComicData | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [view, setView] = useState<'series' | 'volumes' | 'reader'>('series');
 
   useEffect(() => {
-    const initializeApp = async () => {
-      setIsLoading(true);
-      const config = loadConfig();
-      const bookmarks = loadBookmarks(); // Renamed from 'books' for clarity and consistency
-
-      try {
-        const response = await fetch('https://raw.githubusercontent.com/jgfrigo2/apps_data/refs/heads/main/spidey/spidey.json');
-        if (!response.ok) {
-          throw new Error(`Could not load comics.json: ${response.statusText}`);
-        }
-        const volumesData: Volume[] = await response.json();
-        
-        setState(prev => ({ 
-            ...prev, 
-            bookmarks: bookmarks, // Using 'bookmarks' here
-            config: config,
-            volumes: volumesData 
-        }));
-
-      } catch (error) {
-        console.error("Failed to load local library:", error);
-        setErrorMsg("Error: No s'ha pogut carregar la biblioteca de còmics.");
-      } finally {
-        setIsLoading(false);
-      }
+    const loadData = async () => {
+      const data = await loadComicsData();
+      setComicsData(data as any);
     };
-    
-    initializeApp();
-    // Removed the redundant `loadData` function and `useState` for `volumes`
-    // as the `fetch` call already handles loading volumes into `AppState`.
-  }, []); // Empty dependency array means this runs once on mount
+    loadData();
+  }, []);
 
+  // Group comics by series and sort alphabetically
+  const seriesGroups = useMemo(() => {
+    const grouped = comicsData.reduce((acc, comic) => {
+      const existing = acc.find(g => g.series === comic.series);
+      if (existing) {
+        existing.volumes.push(comic);
+      } else {
+        acc.push({ series: comic.series, volumes: [comic] });
+      }
+      return acc;
+    }, [] as SeriesGroup[]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordInput === PASSWORD) {
-      setState(prev => ({ ...prev, isAuthenticated: true }));
-      setErrorMsg('');
-    } else {
-      setErrorMsg('Contrasenya incorrecta.');
+    // Sort series alphabetically and volumes within each series
+    return grouped
+      .sort((a, b) => a.series.localeCompare(b.series))
+      .map(group => ({
+        ...group,
+        volumes: group.volumes.sort((a, b) => a.volume.localeCompare(b.volume))
+      }));
+  }, [comicsData]);
+
+  const handleSeriesClick = (series: string) => {
+    setSelectedSeries(series);
+    setView('volumes');
+  };
+
+  const handleVolumeClick = (volume: ComicData) => {
+    setSelectedVolume(volume);
+    setCurrentPage(0);
+    setView('reader');
+  };
+
+  const handleBackToSeries = () => {
+    setSelectedSeries(null);
+    setView('series');
+  };
+
+  const handleBackToVolumes = () => {
+    setSelectedVolume(null);
+    setView('volumes');
+  };
+
+  const handleNextPage = () => {
+    if (selectedVolume && currentPage < selectedVolume.pages.length - 1) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
-  const openVolume = (volumeId: string) => {
-    const bookmark = state.bookmarks[volumeId];
-    setCurrentPageIndex(bookmark ? bookmark.pageIndex : 0);
-    setState(prev => ({ ...prev, currentView: 'reader', activeVolumeId: volumeId }));
-  };
-
-  const closeReader = () => {
-    if (document.fullscreenElement) document.exitFullscreen();
-    setState(prev => ({ ...prev, currentView: 'library', activeVolumeId: null }));
-  };
-
-  const handlePageChange = useCallback((direction: 'next' | 'prev') => {
-    const activeVol = state.volumes.find(v => v.id === state.activeVolumeId);
-    if (!activeVol) return;
-
-    let newIndex = currentPageIndex;
-    if (direction === 'next' && currentPageIndex < activeVol.pages.length - 1) newIndex++;
-    else if (direction === 'prev' && currentPageIndex > 0) newIndex--;
-
-    if (newIndex !== currentPageIndex) {
-      setCurrentPageIndex(newIndex);
-      if (state.activeVolumeId) {
-        saveBookmarkLocal(state.activeVolumeId, newIndex);
-        setState(prev => ({
-          ...prev,
-          bookmarks: { ...prev.bookmarks, [prev.activeVolumeId!]: { volumeId: prev.activeVolumeId!, pageIndex: newIndex, timestamp: Date.now() } }
-        }));
-      }
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
     }
-  }, [currentPageIndex, state.activeVolumeId, state.volumes]);
-
-  useEffect(() => {
-    if (state.currentView !== 'reader') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'd') handlePageChange('next');
-      if (e.key === 'ArrowLeft' || e.key === 'a') handlePageChange('prev');
-      if (e.key === 'Escape') closeReader();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.currentView, handlePageChange]);
-
-  const hierarchyByAlpha = useMemo(() => {
-    const hierarchy: Record<string, Record<string, Volume[]>> = {};
-    state.volumes
-      .filter(v => v.seriesTitle?.toLowerCase().includes(state.searchQuery.toLowerCase()))
-      .forEach(vol => {
-        const firstChar = vol.seriesTitle.charAt(0).toUpperCase();
-        const letter = /[A-Z]/.test(firstChar) ? firstChar : '#';
-        if (!hierarchy[letter]) hierarchy[letter] = {};
-        if (!hierarchy[letter][vol.seriesTitle]) hierarchy[letter][vol.seriesTitle] = [];
-        hierarchy[letter][vol.seriesTitle].push(vol);
-      });
-    return hierarchy;
-  }, [state.volumes, state.searchQuery]);
-
-  const sortedLetters = useMemo(() => Object.keys(hierarchyByAlpha).sort(), [hierarchyByAlpha]);
-  const currentVolume = useMemo(() => state.volumes.find(v => v.id === state.activeVolumeId), [state.volumes, state.activeVolumeId]);
-
-  if (!state.isAuthenticated) {
-    return <AuthView handleLogin={handleLogin} passwordInput={passwordInput} setPasswordInput={setPasswordInput} errorMsg={errorMsg} />;
-  }
-
-  if (state.currentView === 'reader' && currentVolume) {
-    return <ReaderView volume={currentVolume} closeReader={closeReader} currentPageIndex={currentPageIndex} setCurrentPageIndex={setCurrentPageIndex} handlePageChange={handlePageChange} />;
-  }
-  
-  const toggleAlpha = (letter: string) => {
-    setExpandedAlpha(prev => ({ ...prev, [letter]: !prev[letter] }));
   };
-  
+
+  const currentSeriesVolumes = useMemo(() => {
+    if (!selectedSeries) return [];
+    const group = seriesGroups.find(g => g.series === selectedSeries);
+    return group?.volumes || [];
+  }, [selectedSeries, seriesGroups]);
+
   return (
-    <div className="h-screen w-screen font-sans flex flex-col md:flex-row bg-spidey-black overflow-hidden border-4 border-black">
-      {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed md:sticky top-0 left-0 h-full w-72 bg-spidey-red text-white z-50 transition-transform duration-300 transform border-r-4 border-black shadow-2xl flex flex-col shrink-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <div className="absolute inset-0 opacity-20 bg-spider-web pointer-events-none"></div>
-        <div className="p-6 border-b-4 border-black bg-spidey-red relative z-10 flex justify-between items-center shrink-0">
-          <h1 className="text-3xl font-comic tracking-wider text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)] -rotate-2">
-            {APP_TITLE}
+    <div className="flex h-screen bg-gray-900 text-white">
+      {/* Left Sidebar - Series List */}
+      <div className="w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto">
+        <div className="p-4 border-b border-gray-700">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Book className="w-6 h-6" />
+            Spider-Man Comics
           </h1>
-          <button className="md:hidden p-1 bg-black/20 rounded" onClick={() => setIsSidebarOpen(false)}><X size={24}/></button>
         </div>
         
-        <nav className="p-4 space-y-4 relative z-10 flex-1 overflow-y-auto scrollbar-hide bg-spidey-red">
-            <button onClick={() => { setState(s => ({...s, selectedSeries: null, searchQuery: ''})); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-black font-bold uppercase text-sm transition-all ${!state.selectedSeries ? 'bg-spidey-blue shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' : 'bg-transparent border-white/20 hover:bg-black/10'}`}>
-                <Library size={18} /> <span>Biblioteca</span>
+        <div className="p-4">
+          {seriesGroups.map(group => (
+            <button
+              key={group.series}
+              onClick={() => handleSeriesClick(group.series)}
+              className={`w-full text-left p-3 mb-2 rounded-lg transition-colors ${
+                selectedSeries === group.series
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+            >
+              <div className="font-medium">{group.series}</div>
+              <div className="text-sm text-gray-400 mt-1">
+                {group.volumes.length} volume{group.volumes.length !== 1 ? 's' : ''}
+              </div>
             </button>
-            
-            <div className="pt-4 border-t-2 border-black/20">
-                <span className="text-xs font-black uppercase tracking-[0.2em] mb-4 block px-2 opacity-60">Biblioteca A-Z</span>
-                <div className="space-y-1">
-                    {sortedLetters.map(letter => (
-                        <div key={letter} className="group">
-                            <button 
-                                onClick={() => toggleAlpha(letter)}
-                                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-bold rounded transition-colors ${expandedAlpha[letter] ? 'bg-black/20 text-spidey-yellow' : 'hover:bg-black/10'}`}
-                            >
-                                <span className="flex items-center gap-2">
-                                    <span className="w-6 h-6 flex items-center justify-center bg-black/30 rounded text-xs">{letter}</span>
-                                    <span>{letter} Series</span>
-                                </span>
-                                {expandedAlpha[letter] ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
-                            </button>
-                            {expandedAlpha[letter] && (
-                                <div className="ml-4 mt-1 border-l-2 border-white/20 pl-2 space-y-1">
-                                    {Object.keys(hierarchyByAlpha[letter]).map(seriesName => (
-                                        <button 
-                                            key={seriesName}
-                                            onClick={() => { setState(s => ({...s, selectedSeries: seriesName})); setIsSidebarOpen(false); }}
-                                            className={`w-full text-left px-2 py-1.5 text-[11px] font-bold uppercase tracking-tight flex items-center gap-2 transition-all ${state.selectedSeries === seriesName ? 'text-spidey-yellow' : 'text-white/80 hover:text-white'}`}
-                                        >
-                                            <Layers size={10} className="shrink-0" />
-                                            <span className="truncate">{seriesName}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </nav>
-
-        <div className="p-4 border-t-4 border-black bg-black/10 shrink-0">
-             <button onClick={() => { setPasswordInput(''); setState(prev => ({...prev, isAuthenticated: false})); }} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors w-full px-2 font-bold uppercase text-xs">
-                <LogOut size={14} /> Sortir del Sistema
-             </button>
+          ))}
         </div>
-      </aside>
+      </div>
 
-       <LibraryView
-          volumes={state.volumes}
-          bookmarks={state.bookmarks}
-          searchQuery={state.searchQuery}
-          setSearchQuery={(query) => setState(s => ({...s, searchQuery: query}))}
-          hierarchyByAlpha={hierarchyByAlpha}
-          sortedLetters={sortedLetters}
-          selectedSeries={state.selectedSeries}
-          setSelectedSeries={(series) => setState(s => ({...s, selectedSeries: series}))}
-          openVolume={openVolume}
-          isLoadingLibrary={isLoading}
-        />
-        
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {view === 'series' && (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center">
+              <Home className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+              <h2 className="text-2xl font-bold mb-2">Welcome to Spider-Man Comics</h2>
+              <p className="text-gray-400">Select a series from the sidebar to get started</p>
+            </div>
+          </div>
+        )}
+
+        {view === 'volumes' && selectedSeries && (
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6">
+              <button
+                onClick={handleBackToSeries}
+                className="mb-4 flex items-center gap-2 text-blue-400 hover:text-blue-300"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                Back to Series
+              </button>
+              
+              <h2 className="text-3xl font-bold mb-6">{selectedSeries}</h2>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {currentSeriesVolumes.map(volume => (
+                  <div
+                    key={volume.id}
+                    onClick={() => handleVolumeClick(volume)}
+                    className="cursor-pointer group"
+                  >
+                    <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-700 mb-2">
+                      <img
+                        src={volume.coverUrl}
+                        alt={volume.volume}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://via.placeholder.com/300x450?text=No+Cover';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity" />
+                    </div>
+                    <div className="text-sm font-medium">{volume.volume}</div>
+                    {volume.year && <div className="text-xs text-gray-400">{volume.year}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'reader' && selectedVolume && (
+          <div className="flex-1 flex flex-col bg-black">
+            <div className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700">
+              <button
+                onClick={handleBackToVolumes}
+                className="flex items-center gap-2 text-blue-400 hover:text-blue-300"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                Back to Volumes
+              </button>
+              
+              <div className="text-center flex-1">
+                <div className="font-medium">{selectedVolume.series}</div>
+                <div className="text-sm text-gray-400">{selectedVolume.volume}</div>
+              </div>
+              
+              <div className="text-sm text-gray-400">
+                Page {currentPage + 1} / {selectedVolume.pages.length}
+              </div>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center p-4 relative">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0}
+                className="absolute left-4 z-10 p-3 bg-gray-800 rounded-full disabled:opacity-30 hover:bg-gray-700 transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              <img
+                src={selectedVolume.pages[currentPage]}
+                alt={`Page ${currentPage + 1}`}
+                className="max-h-full max-w-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://via.placeholder.com/800x1200?text=Page+Not+Found';
+                }}
+              />
+
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === selectedVolume.pages.length - 1}
+                className="absolute right-4 z-10 p-3 bg-gray-800 rounded-full disabled:opacity-30 hover:bg-gray-700 transition-colors"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="bg-gray-800 p-4 border-t border-gray-700">
+              <input
+                type="range"
+                min="0"
+                max={selectedVolume.pages.length - 1}
+                value={currentPage}
+                onChange={(e) => setCurrentPage(parseInt(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-};
+}
 
 export default App;
