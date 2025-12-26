@@ -1,4 +1,5 @@
 // src/App.tsx
+import { loadBookmarks, saveBookmarkLocal, loadConfig, loadComicsData } from './services/mockDataService';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AppState, Volume } from './types'; // Correct import
 import { loadBookmarks, saveBookmarkLocal, loadConfig } from './services/mockDataService';
@@ -63,6 +64,16 @@ const App: React.FC = () => {
     };
     
     initializeApp();
+
+      const loadData = async () => {
+      const data = await loadComicsData();
+      setVolumes(data.volumes);
+    };
+    
+    loadData();
+
+      const [volumes, setVolumes] = useState<Volume[]>([]);
+    
   }, []);
 
 
