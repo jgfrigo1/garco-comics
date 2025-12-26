@@ -7,7 +7,7 @@ import LibraryView from './components/LibraryView';
 import ReaderView from './components/ReaderView';
 // SpideyChat import is gone
 // Ensure all Lucide icons used in this file are listed here
-import { Menu, X, Library, LogOut, ChevronDown, ChevronRight, Layers } from 'lucide-react';
+import { X, Library, LogOut, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 
 const APP_TITLE = "Garco Comics";
 const PASSWORD = "peter";
