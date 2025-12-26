@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume } from '../types.ts';
+import { Volume } from '../types';
 // The import statement below is the only line that has changed
 import { ChevronLeft, Maximize, Minimize2, ZoomIn, ZoomOut, Layers } from 'lucide-react';
 
