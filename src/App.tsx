@@ -121,7 +121,7 @@ const App: React.FC = () => {
   const hierarchyByAlpha = useMemo(() => {
     const hierarchy: Record<string, Record<string, Volume[]>> = {};
     state.volumes
-      .filter(v => v.seriesTitle.toLowerCase().includes(state.searchQuery.toLowerCase()))
+      .filter(v => v.seriesTitle?.toLowerCase().includes(state.searchQuery.toLowerCase()))
       .forEach(vol => {
         const firstChar = vol.seriesTitle.charAt(0).toUpperCase();
         const letter = /[A-Z]/.test(firstChar) ? firstChar : '#';
