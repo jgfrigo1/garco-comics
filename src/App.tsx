@@ -41,7 +41,7 @@ const App: React.FC = () => {
       const books = loadBookmarks();
 
       try {
-        const response = await fetch('/public/data/comics.json');
+        const response = await fetch('https://raw.githubusercontent.com/jgfrigo2/apps_data/refs/heads/main/spidey/spidey.json');
         if (!response.ok) {
           throw new Error(`Could not load comics.json: ${response.statusText}`);
         }
