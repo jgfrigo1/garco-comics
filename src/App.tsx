@@ -1,8 +1,7 @@
 // src/App.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Volume } from './types';
 import { loadComicsData } from './services/mockDataService';
-import { X, Home, Book, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Book, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ComicData {
   series: string;
