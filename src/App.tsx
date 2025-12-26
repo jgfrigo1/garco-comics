@@ -85,17 +85,18 @@ function App() {
     setView('volumes');
   };
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (selectedVolume && currentPage < selectedVolume.pages.length - 1) {
-      setCurrentPage(currentPage + 1);
+      setCurrentPage((p) => p + 1);
     }
-  };
-
-  const handlePrevPage = () => {
+  }, [selectedVolume, currentPage]);
+  
+  const handlePrevPage = useCallback(() => {
     if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
+      setCurrentPage((p) => p - 1);
     }
-  };
+  }, [currentPage]);
+
 
   // Touch gestures for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -117,16 +118,19 @@ function App() {
     setTouchStart(null);
   };
 
-  // Keyboard navigation
+    // Keyboard navigation
   useEffect(() => {
+    if (view !== 'reader') return;
+  
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (view !== 'reader') return;
       if (e.key === 'ArrowLeft') handlePrevPage();
       if (e.key === 'ArrowRight') handleNextPage();
     };
+  
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [view, currentPage, selectedVolume]);
+  }, [view, handlePrevPage, handleNextPage]);
+
 
   const currentSeriesVolumes = useMemo(() => {
     if (!selectedSeries) return [];
