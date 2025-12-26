@@ -1,13 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import './index.css'; // Imports your global styles
+import App from './App'; // Imports your main App component
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
+// This finds the 'root' div in your public/index.html file
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
 
-const root = ReactDOM.createRoot(rootElement);
+// This tells React to render your entire application inside that div
 root.render(
   <React.StrictMode>
     <App />
