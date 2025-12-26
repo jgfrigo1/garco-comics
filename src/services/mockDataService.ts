@@ -1,4 +1,4 @@
-import { Bookmark, Config } from '../types.ts';
+import { Bookmark, Config } from '../types';
 
 // --- Bookmarks ---
 
