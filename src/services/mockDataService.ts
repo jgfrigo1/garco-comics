@@ -1,7 +1,21 @@
-import { Bookmark, Config } from '../types';
+import { Bookmark, Config, Volume } from '../types';
+
+// --- Load Comics Data ---
+export const loadComicsData = async (): Promise<{ volumes: Volume[] }> => {
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/jgfrigo2/apps_data/refs/heads/main/spidey/spidey.json');
+    if (!response.ok) {
+      throw new Error(`Failed to load comics data: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to load comics data:", error);
+    return { volumes: [] };
+  }
+};
 
 // --- Bookmarks ---
-
 export const loadBookmarks = (): { [key: string]: Bookmark } => {
   try {
     const savedBookmarks = localStorage.getItem('garco_bookmarks');
@@ -27,9 +41,7 @@ export const saveBookmarkLocal = (volumeId: string, pageIndex: number): void => 
   }
 };
 
-
 // --- Config ---
-
 export const loadConfig = (): Config => {
   const defaultConfig: Config = {
     cloudflareWorkerUrl: '',
