@@ -1,12 +1,12 @@
 // src/App.tsx
-import { loadBookmarks, saveBookmarkLocal, loadConfig, loadComicsData } from './services/mockDataService';
+import { loadBookmarks, saveBookmarkLocal, loadConfig } from './services/mockDataService';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AppState, Volume } from './types'; // Correct import
-import { loadBookmarks, saveBookmarkLocal, loadConfig } from './services/mockDataService';
+// Removed duplicate import for mockDataService functions
 import AuthView from './components/AuthView';
 import LibraryView from './components/LibraryView';
 import ReaderView from './components/ReaderView';
-// SpideyChat import is gone
+// SpideyChat import is gone, confirmed by the comment.
 // Ensure all Lucide icons used in this file are listed here
 import { X, Library, LogOut, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 
@@ -20,9 +20,9 @@ const App: React.FC = () => {
     activeVolumeId: null,
     volumes: [],
     bookmarks: {},
-    fileHandle: null,
-    libraryData: { categories: [], volumeAssignments: {} },
-    selectedCategoryId: null,
+    fileHandle: null, // Consider if this is still needed or fully implemented
+    libraryData: { categories: [], volumeAssignments: {} }, // Consider if this is still needed or fully implemented
+    selectedCategoryId: null, // Consider if this is still needed or fully implemented
     searchQuery: '',
     config: { cloudflareWorkerUrl: '', webDavUrl: '', webDavUser: '', webDavPass: '', geminiApiKey: '' },
     selectedSeries: null,
@@ -39,7 +39,7 @@ const App: React.FC = () => {
     const initializeApp = async () => {
       setIsLoading(true);
       const config = loadConfig();
-      const books = loadBookmarks();
+      const bookmarks = loadBookmarks(); // Renamed from 'books' for clarity and consistency
 
       try {
         const response = await fetch('https://raw.githubusercontent.com/jgfrigo2/apps_data/refs/heads/main/spidey/spidey.json');
@@ -50,7 +50,7 @@ const App: React.FC = () => {
         
         setState(prev => ({ 
             ...prev, 
-            bookmarks: books, 
+            bookmarks: bookmarks, // Using 'bookmarks' here
             config: config,
             volumes: volumesData 
         }));
@@ -64,17 +64,9 @@ const App: React.FC = () => {
     };
     
     initializeApp();
-
-      const loadData = async () => {
-      const data = await loadComicsData();
-      setVolumes(data.volumes);
-    };
-    
-    loadData();
-
-      const [volumes, setVolumes] = useState<Volume[]>([]);
-    
-  }, []);
+    // Removed the redundant `loadData` function and `useState` for `volumes`
+    // as the `fetch` call already handles loading volumes into `AppState`.
+  }, []); // Empty dependency array means this runs once on mount
 
 
   const handleLogin = (e: React.FormEvent) => {
