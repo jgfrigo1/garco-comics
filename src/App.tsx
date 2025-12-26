@@ -1,10 +1,12 @@
+// src/App.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AppState, Volume } from './types';
+import { AppState, Volume } from './types'; // Correct import
 import { loadBookmarks, saveBookmarkLocal, loadConfig } from './services/mockDataService';
 import AuthView from './components/AuthView';
 import LibraryView from './components/LibraryView';
 import ReaderView from './components/ReaderView';
-// SpideyChat import is now gone
+// SpideyChat import is gone
+// Ensure all Lucide icons used in this file are listed here
 import { Menu, X, Library, LogOut, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 
 const APP_TITLE = "Garco Comics";
@@ -221,7 +223,6 @@ const App: React.FC = () => {
           isLoadingLibrary={isLoading}
         />
         
-        {/* The SpideyChat component usage is now gone */}
     </div>
   );
 };
