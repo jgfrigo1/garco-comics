@@ -1,4 +1,4 @@
-import { Bookmark, Config, Volume } from '../types';
+import { Bookmark, Config } from '../types';
 
 // --- Load Comics Data ---
 export const loadComicsData = async (): Promise<any[]> => {
