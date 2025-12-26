@@ -4,16 +4,13 @@ import { loadBookmarks, saveBookmarkLocal, loadConfig } from './services/mockDat
 import AuthView from './components/AuthView';
 import LibraryView from './components/LibraryView';
 import ReaderView from './components/ReaderView';
-import SpideyChat from './components/SpideyChat';
+// SpideyChat import is now gone
 import { Menu, X, Library, LogOut, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 
 const APP_TITLE = "Garco Comics";
 const PASSWORD = "peter";
 
 const App: React.FC = () => {
-  // ... all of your component logic, state, effects, etc. ...
-  // (The content you already have is correct, just make sure it's all here)
-
   const [state, setState] = useState<AppState>({
     isAuthenticated: false,
     currentView: 'library',
@@ -148,7 +145,6 @@ const App: React.FC = () => {
     setExpandedAlpha(prev => ({ ...prev, [letter]: !prev[letter] }));
   };
   
-  // The JSX that renders the main layout
   return (
     <div className="h-screen w-screen font-sans flex flex-col md:flex-row bg-spidey-black overflow-hidden border-4 border-black">
       {isSidebarOpen && (
@@ -225,10 +221,9 @@ const App: React.FC = () => {
           isLoadingLibrary={isLoading}
         />
         
-        {state.volumes.length > 0 && <SpideyChat library={state.volumes} />}
+        {/* The SpideyChat component usage is now gone */}
     </div>
   );
 };
 
-// THIS IS THE LINE THAT WAS MISSING OR IN THE WRONG PLACE
 export default App;
